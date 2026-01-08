@@ -10,26 +10,44 @@
 </head>
 <body>
 <h1>アームレスリング育成ゲーム</h1>
+
+<!-- キャラクター選択 -->
+<select id="playerSelect">
+  <option value="player1.png">赤井選手</option>
+  <option value="player2.png">青田選手</option>
+</select>
+
+<div id="arena">
+  <img id="player" src="player1.png" class="character">
+  <img id="opponent" src="opponent.png" class="character">
+</div>
+
 <div id="status"></div>
+
 <div id="controls">
-<button onclick="train('power')">筋力トレーニング</button>
-<button onclick="train('wrist')">手首トレーニング</button>
-<button onclick="train('technique')">技術トレーニング</button>
-<button onclick="train('stamina')">スタミナトレーニング</button>
-<button onclick="train('mental')">メンタルトレーニング</button>
-<button onclick="rest()">休養</button>
+  <button onclick="train('power')">筋力トレーニング</button>
+  <button onclick="train('wrist')">手首トレーニング</button>
+  <button onclick="train('technique')">技術トレーニング</button>
+  <button onclick="train('stamina')">スタミナトレーニング</button>
+  <button onclick="train('mental')">メンタルトレーニング</button>
+  <button onclick="rest()">休養</button>
 </div>
+
 <hr>
+
 <div id="battle">
-<div id="gauge-bg"><div id="gauge"></div></div>
-<button onclick="startTournament('local')">地方大会</button>
-<button onclick="startTournament('national')">全国大会</button>
-<button onclick="startTournament('world')">世界大会</button>
+  <div id="gauge-bg"><div id="gauge"></div></div>
+  <button onclick="startTournament('地方')">地方大会</button>
+  <button onclick="startTournament('全国')">全国大会</button>
+  <button onclick="startTournament('世界')">世界大会</button>
 </div>
+
 <p id="result"></p>
-<p id="ranking">🏆 通算勝利数：0</p>
+<p id="ranking">🏆 通算勝利数: 0</p>
+
 <audio id="winSE" src="win.mp3"></audio>
 <audio id="loseSE" src="lose.mp3"></audio>
+
 <script src="game.js"></script>
 </body>
 </html>
