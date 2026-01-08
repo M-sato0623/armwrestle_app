@@ -1,10 +1,10 @@
 // プレイヤーステータス
 let player = {
-    power: 50,
-    wrist: 50,
-    technique: 50,
-    stamina: 50,
-    mental: 50,
+    power:50,
+    wrist:50,
+    technique:50,
+    stamina:50,
+    mental:50,
     totalWins: parseInt(localStorage.getItem("wins")||0)
 };
 
@@ -35,7 +35,7 @@ function train(type){
 
 // 休養
 function rest(){
-    player.stamina += 10;
+    player.stamina +=10;
     if(player.stamina>100) player.stamina=100;
     alert("休養完了！");
     updateStatus();
@@ -43,7 +43,9 @@ function rest(){
 
 // キャラクター選択
 document.getElementById("playerSelect").addEventListener("change", function(){
-    document.getElementById("player").src = this.value;
+    let playerDiv = document.getElementById("player");
+    if(this.value==="red") playerDiv.style.background="red";
+    else if(this.value==="blue") playerDiv.style.background="blue";
 });
 
 // 試合
@@ -65,14 +67,14 @@ function startTournament(rank){
     let resultText;
     let playerElem = document.getElementById("player");
     let oppElem = document.getElementById("opponent");
+
     if(gauge>=50){
         resultText = "勝利！";
         player.totalWins++;
         document.getElementById("winSE").play();
-        // キャラクターアニメ
         playerElem.style.transform="translateX(50px)";
         oppElem.style.transform="translateX(-50px)";
-    }else{
+    } else {
         resultText = "敗北…";
         document.getElementById("loseSE").play();
         playerElem.style.transform="translateX(-50px)";
@@ -84,7 +86,12 @@ function startTournament(rank){
     updateStatus();
 
     // ゲージ初期化
-    setTimeout(()=>{ playerElem.style.transform="translateX(0)"; oppElem.style.transform="translateX(0)"; gauge=50; updateStatus(); }, 1000);
+    setTimeout(()=>{
+        playerElem.style.transform="translateX(0)";
+        oppElem.style.transform="translateX(0)";
+        gauge=50;
+        updateStatus();
+    },1000);
 }
 
 updateStatus();
