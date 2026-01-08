@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>アームレスリング育成ゲーム</title>
 <link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#222222">
 </head>
 <body>
@@ -13,13 +12,13 @@
 
 <!-- キャラクター選択 -->
 <select id="playerSelect">
-  <option value="player1.png">赤井選手</option>
-  <option value="player2.png">青田選手</option>
+  <option value="red">赤井選手</option>
+  <option value="blue">青田選手</option>
 </select>
 
 <div id="arena">
-  <img id="player" src="player1.png" class="character">
-  <img id="opponent" src="opponent.png" class="character">
+  <div id="player" class="character" style="background:red;"></div>
+  <div id="opponent" class="character" style="background:gray;"></div>
 </div>
 
 <div id="status"></div>
