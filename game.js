@@ -1,62 +1,100 @@
+const enemies = [
+  {
+    name: "赤井 剛",
+    power: 14,
+    stamina: 6,
+    pattern: "burst"
+  },
+  {
+    name: "青田 俊",
+    power: 10,
+    stamina: 10,
+    pattern: "speed"
+  },
+  {
+    name: "黒川 鉄",
+    power: 9,
+    stamina: 14,
+    pattern: "defense"
+  }
+];
+
+let currentEnemyIndex = 0;
 let player = {
-  power:50,
-  wrist:50,
-  technique:50,
-  stamina:50,
-  mental:50
+  power: 10,
+  stamina: 10
 };
+let gauge = 50; // 0 = プレイヤー勝利 / 100 = CPU勝利
+let matchActive = false;
+function cpuPower(enemy) {
+  switch (enemy.pattern) {
+    case "burst": // 赤井：最初だけ強い
+      return enemy.stamina > 3 ? enemy.power + 4 : enemy.power - 3;
 
-let gauge = 50;
+    case "speed": // 青田：安定
+      return enemy.power + Math.random() * 3;
 
-const gaugeElem = document.getElementById("gauge");
-const statusElem = document.getElementById("status");
-const playerImg = document.getElementById("player");
-const opponentImg = document.getElementById("opponent");
+    case "defense": // 黒川：粘る
+      return enemy.power - 1;
 
-function updateStatus(){
-  statusElem.innerText =
-   `筋力:${player.power} 手首:${player.wrist} 技術:${player.technique}
-スタミナ:${player.stamina} メンタル:${player.mental}`;
-  gaugeElem.style.width = gauge + "%";
+    default:
+      return enemy.power;
+  }
 }
+function push() {
+  if (!matchActive) return;
 
-function train(type){
-  player[type] += 5;
-  if(player[type] > 100) player[type] = 100;
-  updateStatus();
+  gauge -= player.power * 0.4;
+  player.stamina -= 0.5;
+
+  updateGauge();
 }
+function startMatch() {
+  matchActive = true;
+  gauge = 50;
 
-function startMatch(){
-  let playerScore =
-    player.power + player.wrist + player.technique +
-    player.stamina + player.mental;
+  const enemy = enemies[currentEnemyIndex];
 
-  let enemyScore = Math.random() * 400 + 200;
+  document.getElementById("enemyName").textContent = enemy.name;
+  document.getElementById("result").textContent = "";
 
-  gauge = Math.max(0, Math.min(100, 50 + (playerScore - enemyScore) / 8));
+  const interval = setInterval(() => {
+    if (!matchActive) {
+      clearInterval(interval);
+      return;
+    }
 
-  if(gauge >= 50){
-    document.getElementById("result").innerText = "勝利！";
-    playerImg.style.transform = "translateX(40px)";
-    opponentImg.style.transform = "translateX(-40px) scaleX(-1)";
+    const cpu = cpuPower(enemy);
+    gauge += cpu * 0.3;
+
+    enemy.stamina -= 0.3;
+    player.stamina += 0.2; // 自然回復
+
+    updateGauge();
+
+    if (gauge <= 0) {
+      endMatch(true);
+      clearInterval(interval);
+    } else if (gauge >= 100) {
+      endMatch(false);
+      clearInterval(interval);
+    }
+  }, 500);
+}
+function endMatch(win) {
+  matchActive = false;
+
+  const result = document.getElementById("result");
+
+  if (win) {
+    result.textContent = "🏆 勝利！";
+    currentEnemyIndex++;
   } else {
-    document.getElementById("result").innerText = "敗北…";
-    playerImg.style.transform = "translateX(-20px)";
-    opponentImg.style.transform = "translateX(20px) scaleX(-1)";
+    result.textContent = "💀 敗北…";
   }
 
-  updateStatus();
-
-  setTimeout(()=>{
-    playerImg.style.transform = "translateX(0)";
-    opponentImg.style.transform = "scaleX(-1)";
-    gauge = 50;
-    updateStatus();
-  }, 1000);
+  player.stamina = 10;
 }
-
-document.getElementById("playerSelect").addEventListener("change", e=>{
-  playerImg.src = e.target.value;
-});
-
-updateStatus();
+function updateGauge() {
+  document.getElementById("gauge").style.width = gauge + "%";
+}
