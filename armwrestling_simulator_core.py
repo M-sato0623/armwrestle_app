@@ -1,166 +1,210 @@
-armwrestle_app/
-├─ index.html
-├─ style.css
-├─ game.js
-├─ manifest.json
-├─ service-worker.js
-├─ win.mp3
-├─ lose.mp3
-├─ icon-192.png
-├─ icon-512.png
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>アームレスリング育成ゲーム</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#222222">
-</head>
-<body>
-  <h1>アームレスリング育成ゲーム</h1>
+"""
+Armwrestling Competition Simulator - Core Engine (MVP)
+思想：競技再現・癖学習・トーナメント対応
+"""
 
-  <div id="status">
-    <p id="playerStats">ステータス表示</p>
-    <p id="fatigue">疲労:0</p>
-    <p id="injury"></p>
-  </div>
+import random
+from collections import defaultdict
 
-  <div id="controls">
-    <button onclick="train('power')">筋力トレーニング</button>
-    <button onclick="train('wrist')">手首トレーニング</button>
-    <button onclick="train('technique')">技術トレーニング</button>
-    <button onclick="train('stamina')">スタミナトレーニング</button>
-    <button onclick="train('mental')">メンタルトレーニング</button>
-    <button onclick="rest()">休養</button>
-  </div>
+# ==============================
+# 選手モデル
+# ==============================
+class Fighter:
+    def __init__(self, name, weight, style, dominant="right"):
+        self.name = name
+        self.weight = weight
+        self.style = style
+        self.dominant = dominant
 
-  <hr>
+        # 基本能力
+        self.power = 70
+        self.tech = 70
+        self.nerve = 100
 
-  <div id="battle">
-    <div id="gauge-bg"><div id="gauge"></div></div>
-    <button onclick="startTournament('local')">地方大会</button>
-    <button onclick="startTournament('national')">全国大会</button>
-    <button onclick="startTournament('world')">世界大会</button>
-  </div>
+        # 部位耐久
+        self.parts = {
+            "wrist": 100,
+            "fingers": 100,
+            "elbow": 100,
+            "shoulder": 100
+        }
 
-  <p id="result"></p>
-  <p id="ranking">🏆 通算勝利数：0</p>
+        # 癖記録
+        self.habits = defaultdict(int)
 
-  <audio id="winSE" src="win.mp3"></audio>
-  <audio id="loseSE" src="lose.mp3"></audio>
+    def damage_penalty(self):
+        return sum(100 - v for v in self.parts.values()) * 0.002
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    def is_broken(self):
+        return any(v <= 0 for v in self.parts.values())
 
-  <script src="game.js"></script>
-</body>
-</html>
-body { font-family:sans-serif; text-align:center; padding:20px; background:#111; color:#eee; }
-button { padding:10px 20px; margin:5px; font-size:16px; }
-#gauge-bg { width:100%; height:20px; background:#444; margin:20px 0; border-radius:10px; }
-#gauge { height:100%; width:50%; background:linear-gradient(to right, red, yellow, green); transition: width 0.3s; border-radius:10px; }
-// Firebase初期化
-const firebaseConfig = { apiKey:"YOUR_KEY", authDomain:"YOUR_DOMAIN", projectId:"YOUR_PROJECT_ID" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
-auth.signInAnonymously();
 
-// プレイヤークラス
-class ArmWrestler {
-  constructor(name){ 
-    this.name=name;
-    this.power=70; this.wrist=65; this.technique=60;
-    this.maxStamina=80; this.stamina=80;
-    this.mental=60;
-    this.fatigue=0; this.injury=false;
-    this.reaction=Math.floor(Math.random()*61)+40;
-  }
-  growth(value, base, sponsorKey=null, sponsorEffect=null){
-    let gain=Math.floor(base*(100-value)/100);
-    if(sponsorKey && sponsorEffect && sponsorEffect[sponsorKey]) gain=Math.floor(gain*sponsorEffect[sponsorKey]);
-    return gain;
-  }
-  train(menu,sponsor=null){
-    if(this.injury) return `🤕 ケガ中でトレーニング不可`;
-    if(this.fatigue>=80) return `😵 疲労が溜まりすぎ`;
-
-    let msg="";
-    if(menu==="power"){ let g=this.growth(this.power,5,"power_growth",sponsor); this.power+=g; this.fatigue+=15; if(Math.random()<0.15){this.injury=true; msg=`💥 筋力+${g} しかしケガ`; }else{msg=`💪 筋力+${g}`;} }
-    else if(menu==="wrist"){ let g=this.growth(this.wrist,4,"wrist_growth",sponsor); this.wrist+=g; this.fatigue+=10; msg=`🤚 手首+${g}`; }
-    else if(menu==="technique"){ let g=this.growth(this.technique,3,"tech_growth",sponsor); this.technique+=g; this.fatigue+=8; msg=`🎯 技術+${g}`; }
-    else if(menu==="stamina"){ let g=this.growth(this.maxStamina,4,"stamina_growth",sponsor); this.maxStamina+=g; this.stamina+=g; this.fatigue+=10; msg=`🏃 スタミナ+${g}`; }
-    else if(menu==="mental"){ if(Math.random()<0.2){this.fatigue+=5; msg=`🧠 集中できず失敗`; } else { let g=this.growth(this.mental,3,"mental_growth",sponsor); this.mental+=g; this.fatigue+=5; msg=`🧠 メンタル+${g}`; } }
-    updateStatus();
-    return msg;
-  }
-  rest(){ this.fatigue=Math.max(0,this.fatigue-30); this.stamina=this.maxStamina; if(this.injury && Math.random()<0.4){this.injury=false; return "🩹 休養でケガが治った"; } updateStatus(); return "😌 休養して回復した"; }
+# ==============================
+# スタイル定義（実在思想）
+# ==============================
+STYLE_BONUS = {
+    "levan": {"press": 1.3, "top": 1.2},
+    "todd": {"hook": 1.3, "defend": 1.2},
+    "hand": {"top": 1.3, "fingers": 1.2},
+    "balanced": {}
 }
 
-// グローバル
-let player = new ArmWrestler("PLAYER");
-let sponsor = null;
-let totalWins = parseInt(localStorage.getItem("wins")||0);
-
-// UI更新
-function updateStatus(){
-  document.getElementById("playerStats").innerText=`筋力:${player.power} 手首:${player.wrist} 技術:${player.technique} スタミナ:${player.stamina}/${player.maxStamina} メンタル:${player.mental}`;
-  document.getElementById("fatigue").innerText=`疲労:${player.fatigue}`;
-  document.getElementById("injury").innerText=player.injury?"⚠ ケガ中":"";
+# ==============================
+# 技定義
+# ==============================
+TECHS = {
+    "press": {"target": "elbow", "nerve": -18},
+    "hook": {"target": "shoulder", "nerve": -12},
+    "top": {"target": "wrist", "nerve": -15},
+    "fingers": {"target": "fingers", "nerve": -14},
+    "defend": {"target": None, "nerve": +8}
 }
 
-// トレーニング
-function train(menu){ let msg=player.train(menu,sponsor); alert(msg); }
+# ==============================
+# 力計算
+# ==============================
+def calc_force(fighter, tech_name):
+    base = fighter.power * 0.6 + fighter.tech * 0.4
+    nerve_rate = fighter.nerve / 100
+    penalty = fighter.damage_penalty()
 
-// バトル・大会
-function createCPU(rank,matchNum){ return new ArmWrestler(`CPU_${rank}_${matchNum}`); }
-function startTournament(rank){
-  if(player.injury){ alert("🤕 ケガで大会棄権"); return; }
-  let rounds={"local":3,"national":4,"world":5}[rank];
-  alert(`${rank.toUpperCase()}大会開始`);
-  for(let i=1;i<=rounds;i++){ let cpu=createCPU(rank,i); fightMatch(cpu); player.fatigue+=10; if(player.stamina<=0||player.injury){ alert("❌ 敗北…大会終了"); return; } }
-  alert(`🏆 ${rank.toUpperCase()}大会優勝！`);
-  totalWins+=rounds; localStorage.setItem("wins",totalWins);
-  submitScore(player.name,totalWins*10,totalWins); loadRanking();
-}
+    force = base * nerve_rate * (1 - penalty)
 
-// 戦術選択バトル
-function fightMatch(cpu){
-  let tech=prompt("技を選択 (toproll / hook / press)",""); if(!tech) tech="toproll";
-  let gauge=document.getElementById("gauge"); gauge.style.width=(Math.random()*100)+"%";
-  let resultText=document.getElementById("result");
+    if fighter.style in STYLE_BONUS:
+        force *= STYLE_BONUS[fighter.style].get(tech_name, 1.0)
 
-  let win=false;
-  if((tech==="toproll"&&cpu.technique%3===0)||(tech==="hook"&&cpu.technique%3===1)||(tech==="press"&&cpu.technique%3===2)) win=true;
+    return force * random.uniform(0.85, 1.15)
 
-  if(win){ resultText.innerText=`勝利 vs ${cpu.name}`; document.getElementById("winSE").play(); navigator.vibrate(100); totalWins+=1; }
-  else{ resultText.innerText=`敗北 vs ${cpu.name}`; document.getElementById("loseSE").play(); navigator.vibrate([50,50,50]); player.fatigue+=30; player.stamina=Math.max(0,player.stamina-20); }
-  updateStatus();
-}
+# ==============================
+# AI（癖学習）
+# ==============================
+def ai_choose(player_habits, cpu_style):
+    if not player_habits:
+        return random.choice(list(TECHS.keys()))
 
-// 世界ランキング
-function submitScore(name,rating,wins){ const uid=auth.currentUser.uid; db.collection("players").doc(uid).set({name,rating,wins,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}); }
-function loadRanking(){ db.collection("players").orderBy("rating","desc").limit(10).get().then(snapshot=>{ let text="🌍 世界ランキング\n"; let rank=1; snapshot.forEach(doc=>{const p=doc.data(); text+=`${rank}. ${p.name} (${p.rating})\n`; rank++;}); document.getElementById("ranking").innerText=text; }); }
+    most_used = max(player_habits, key=player_habits.get)
+    counter = {
+        "press": "defend",
+        "hook": "top",
+        "top": "hook",
+        "fingers": "press"
+    }
 
-// 初期化
-updateStatus(); loadRanking();
-{
-  "name": "Arm Wrestling Game",
-  "short_name": "ArmWrestle",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#111111",
-  "theme_color": "#222222",
-  "orientation": "portrait",
-  "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ]
-}
-const CACHE_NAME = "armwrestle-v1";
-const urlsToCache = ["./", "./index.html", "./style.css", "./game.js", "./manifest.json"];
-self.addEventListener("install", event => { event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))); });
-self.addEventListener("fetch", event => { event.respondWith(caches.match(event.request).then(resp => resp || fetch(event.request))); });
+    if random.random() < 0.7:
+        return counter.get(most_used, random.choice(list(TECHS.keys())))
+    return random.choice(list(TECHS.keys()))
+
+# ==============================
+# 試合エンジン（プレイヤー操作＋セットアップ＋ファウル）
+# ==============================
+def foul_check(tech, nerve, referee_level):
+    """ファウル判定: referee_level 1=甘い 2=普通 3=厳しい"""
+    base = {
+        "press": 0.15,
+        "hook": 0.10,
+        "top": 0.12,
+        "fingers": 0.18,
+        "defend": 0.05
+    }[tech]
+
+    nerve_factor = (100 - nerve) / 100
+    referee_factor = {"1": 0.6, "2": 1.0, "3": 1.5}[referee_level]
+
+    foul_rate = base * (1 + nerve_factor) * referee_factor
+    return random.random() < foul_rate
+
+
+def match(f1: Fighter, f2: Fighter, verbose=True):
+    angle = 0
+
+    # ---- セットアップ ----
+    print("
+【セットアップ】")
+    print("ナックル高さ: 1=低い 2=標準 3=高い")
+    knuckle = input("選択: ")
+
+    print("親指位置: 1=浅い 2=標準 3=深い")
+    thumb = input("選択: ")
+
+    print("審判厳しさ: 1=甘い 2=普通 3=厳しい")
+    referee = input("選択: ")
+
+    f1_fouls = 0
+
+    for turn in range(1, 16):
+        if abs(angle) >= 10 or f1.is_broken() or f2.is_broken():
+            break
+
+        print(f"
+--- Turn {turn} ---")
+        print(f"角度: {angle}")
+        print(f"神経: {f1.nerve}  | ファウル: {f1_fouls}")
+        print("技を選択: press / hook / top / fingers / defend")
+
+        p_tech = input("選択: ").strip()
+        if p_tech not in TECHS:
+            p_tech = "defend"
+
+        f1.habits[p_tech] += 1
+        c_tech = ai_choose(f1.habits, f2.style)
+
+        # ---- ファウル判定 ----
+        if foul_check(p_tech, f1.nerve, referee):
+            f1_fouls += 1
+            print("⚠️ ファウル！")
+            if f1_fouls >= 2:
+                print("❌ 失格負け")
+                return f2
+            continue
+
+        f1.nerve = max(0, f1.nerve + TECHS[p_tech]["nerve"])
+        f2.nerve = max(0, f2.nerve + TECHS[c_tech]["nerve"])
+
+        f1_force = calc_force(f1, p_tech)
+        f2_force = calc_force(f2, c_tech)
+
+        diff = f1_force - f2_force
+        angle += int(diff / 15)
+
+        if TECHS[p_tech]["target"]:
+            f2.parts[TECHS[p_tech]["target"]] -= int(abs(diff) * 0.4)
+        if TECHS[c_tech]["target"]:
+            f1.parts[TECHS[c_tech]["target"]] -= int(abs(diff) * 0.4)
+
+        if verbose:
+            print(f"あなた:{p_tech} vs CPU:{c_tech} | 力差 {int(diff)}")
+            print("CPU部位:", f2.parts)
+
+    return f1 if angle > 0 else f2
+
+# ==============================
+# トーナメント
+# ==============================
+def tournament(fighters):
+    random.shuffle(fighters)
+    round_no = 1
+
+    while len(fighters) > 1:
+        print(f"\n=== Round {round_no} ===")
+        winners = []
+
+        for i in range(0, len(fighters), 2):
+            w = match(fighters[i], fighters[i+1])
+            print(f"Winner: {w.name}")
+            winners.append(w)
+
+        fighters = winners
+        round_no += 1
+
+    print(f"\n🏆 Champion: {fighters[0].name}")
+
+
+# ==============================
+# デモ実行
+# ==============================
+if __name__ == "__main__":
+    player = Fighter("PLAYER", 110, "hand")
+    cpu1 = Fighter("LEVAN_AI", 180, "levan")
+    cpu2 = Fighter("TODD_AI", 115, "todd")
+
+    tournament([player, cpu1, cpu2])
