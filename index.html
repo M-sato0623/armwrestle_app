@@ -1,8 +1,57 @@
-<div id="enemyName"></div>
-<div id="gauge"></div>
-<div id="result"></div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Arm Wrestling Game</title>
 
-<button onclick="startMatch()">試合開始</button>
-<button onclick="push()">押す</button>
-<button onclick="useHook()">フック</button>
-<button onclick="useTopRoll()">トップロール</button>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+      text-align: center;
+    }
+
+    #gaugeBox {
+      width: 300px;
+      height: 20px;
+      background: #444;
+      margin: 20px auto;
+    }
+
+    #gauge {
+      height: 100%;
+      width: 50%;
+      background: red;
+    }
+
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>アームレスリング</h1>
+
+  <h2 id="enemyName">敵名</h2>
+
+  <div id="gaugeBox">
+    <div id="gauge"></div>
+  </div>
+
+  <div id="result"></div>
+
+  <button onclick="startMatch()">試合開始</button>
+  <button onclick="push()">押す</button>
+  <button onclick="useHook()">フック</button>
+  <button onclick="useTopRoll()">トップロール</button>
+
+  <!-- ★ここが超重要 -->
+  <script src="game.js"></script>
+
+</body>
+</html>
