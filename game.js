@@ -137,3 +137,68 @@ if (hookActive) {
     hookActive = false;
   }
 }
+const enemies = [
+  {
+    name: "赤井 剛",
+    power: 14,
+    stamina: 6,
+    pattern: "burst",
+    skill: "powerBurst"
+  },
+  {
+    name: "青田 俊",
+    power: 10,
+    stamina: 10,
+    pattern: "speed",
+    skill: null
+  },
+  {
+    name: "黒川 鉄",
+    power: 9,
+    stamina: 14,
+    pattern: "defense",
+    skill: "lock"
+  }
+];
+let enemySkillActive = false;
+let enemySkillTimer = 0;
+// 敵が技を使う判定
+if (!enemySkillActive && enemy.skill && Math.random() < 0.2 && enemy.stamina > 3) {
+  activateEnemySkill(enemy);
+}
+function activateEnemySkill(enemy) {
+  enemySkillActive = true;
+
+  if (enemy.skill === "powerBurst") {
+    enemySkillTimer = 1;
+    enemy.stamina -= 3;
+    document.getElementById("result").textContent = "💥 敵のパワーバースト！";
+  }
+
+  if (enemy.skill === "lock") {
+    enemySkillTimer = 3;
+    document.getElementById("result").textContent = "🔒 敵が腕をロックした！";
+  }
+}
+let cpuForce = cpu;
+
+// フック軽減
+if (hookActive) {
+  cpuForce *= 0.5;
+}
+
+// 敵パワーバースト
+if (enemySkillActive && enemy.skill === "powerBurst") {
+  cpuForce *= 2;
+}
+
+// 黒川ロック：ゲージ変動を抑える
+if (enemySkillActive && enemy.skill === "lock") {
+  cpuForce *= 0.2;
+}
+if (enemySkillActive) {
+  enemySkillTimer--;
+  if (enemySkillTimer <= 0) {
+    enemySkillActive = false;
+  }
+}
