@@ -1,0 +1,4 @@
+body { font-family:sans-serif; text-align:center; padding:20px; background:#111; color:#eee; }
+button { padding:10px 20px; margin:5px; font-size:16px; }
+#gauge-bg { width:100%; height:20px; background:#444; margin:20px 0; border-radius:10px; }
+#gauge { height:100%; width:50%; background:linear-gradient(to right, red, yellow, green); transition: width 0.3s; border-radius:10px; }

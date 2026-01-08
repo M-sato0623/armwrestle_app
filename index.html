@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アームレスリング育成ゲーム</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#222222">
+</head>
+<body>
+<h1>アームレスリング育成ゲーム</h1>
+<div id="status"></div>
+<div id="controls">
+<button onclick="train('power')">筋力トレーニング</button>
+<button onclick="train('wrist')">手首トレーニング</button>
+<button onclick="train('technique')">技術トレーニング</button>
+<button onclick="train('stamina')">スタミナトレーニング</button>
+<button onclick="train('mental')">メンタルトレーニング</button>
+<button onclick="rest()">休養</button>
+</div>
+<hr>
+<div id="battle">
+<div id="gauge-bg"><div id="gauge"></div></div>
+<button onclick="startTournament('local')">地方大会</button>
+<button onclick="startTournament('national')">全国大会</button>
+<button onclick="startTournament('world')">世界大会</button>
+</div>
+<p id="result"></p>
+<p id="ranking">🏆 通算勝利数：0</p>
+<audio id="winSE" src="win.mp3"></audio>
+<audio id="loseSE" src="lose.mp3"></audio>
+<script src="game.js"></script>
+</body>
+</html>
