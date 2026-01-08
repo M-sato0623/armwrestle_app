@@ -1,66 +1,46 @@
+// ===== デバッグ確認 =====
+console.log("game.js 読み込み成功");
+
 // ==========================
-// キャラクター定義
+// 敵キャラクター
 // ==========================
 const enemies = [
-  {
-    name: "赤井 剛",
-    power: 14,
-    stamina: 6,
-    pattern: "burst",
-    skill: "powerBurst"
-  },
-  {
-    name: "青田 俊",
-    power: 10,
-    stamina: 10,
-    pattern: "speed",
-    skill: null
-  },
-  {
-    name: "黒川 鉄",
-    power: 9,
-    stamina: 14,
-    pattern: "defense",
-    skill: "lock"
-  }
+  { name: "赤井 剛", power: 14, stamina: 6, pattern: "burst", skill: "powerBurst" },
+  { name: "青田 俊", power: 10, stamina: 10, pattern: "speed", skill: null },
+  { name: "黒川 鉄", power: 9, stamina: 14, pattern: "defense", skill: "lock" }
 ];
 
 let currentEnemyIndex = 0;
 
 // ==========================
-// プレイヤー状態
+// プレイヤー
 // ==========================
-let player = {
-  power: 10,
-  stamina: 10
-};
+let player = { power: 10, stamina: 10 };
 
-let gauge = 50; // 0=勝利 / 100=敗北
+let gauge = 50;
 let matchActive = false;
 let loopId = null;
 
 // 技状態
 let hookActive = false;
 let hookTimer = 0;
-
-// 敵スキル
 let enemySkillActive = false;
 let enemySkillTimer = 0;
 
 // ==========================
-// CPU 行動ロジック
+// CPUロジック
 // ==========================
 function cpuPower(enemy) {
-  switch (enemy.pattern) {
-    case "burst":
-      return enemy.stamina > 3 ? enemy.power + 4 : enemy.power - 3;
-    case "speed":
-      return enemy.power + Math.random() * 3;
-    case "defense":
-      return enemy.power - 1;
-    default:
-      return enemy.power;
+  if (enemy.pattern === "burst") {
+    return enemy.stamina > 3 ? enemy.power + 4 : enemy.power - 3;
   }
+  if (enemy.pattern === "speed") {
+    return enemy.power + Math.random() * 3;
+  }
+  if (enemy.pattern === "defense") {
+    return enemy.power - 1;
+  }
+  return enemy.power;
 }
 
 // ==========================
@@ -78,8 +58,6 @@ function startMatch() {
   matchActive = true;
   gauge = 50;
   player.stamina = 10;
-  enemy.stamina = enemy.stamina; // 初期値維持
-
   hookActive = false;
   enemySkillActive = false;
 
@@ -90,52 +68,46 @@ function startMatch() {
 }
 
 // ==========================
-// メインゲームループ
+// メインループ
 // ==========================
 function gameLoop() {
   const enemy = enemies[currentEnemyIndex];
 
-  // --- 敵の技発動判定 ---
+  // 敵スキル発動
   if (!enemySkillActive && enemy.skill && Math.random() < 0.2 && enemy.stamina > 3) {
     activateEnemySkill(enemy);
   }
 
-  // --- CPU 力計算 ---
   let cpuForce = cpuPower(enemy);
 
   if (hookActive) cpuForce *= 0.5;
   if (enemySkillActive && enemy.skill === "powerBurst") cpuForce *= 2;
   if (enemySkillActive && enemy.skill === "lock") cpuForce *= 0.2;
 
-  // --- ゲージ変動 ---
   gauge += cpuForce * 0.3;
   enemy.stamina -= 0.3;
   player.stamina = Math.min(player.stamina + 0.2, 10);
 
-  // --- タイマー処理 ---
   if (hookActive && --hookTimer <= 0) hookActive = false;
   if (enemySkillActive && --enemySkillTimer <= 0) enemySkillActive = false;
 
   updateGauge();
 
-  // --- 勝敗判定 ---
   if (gauge <= 0) endMatch(true);
   if (gauge >= 100) endMatch(false);
 }
 
 // ==========================
-// 勝敗処理
+// 勝敗
 // ==========================
 function endMatch(win) {
   clearInterval(loopId);
   matchActive = false;
 
-  if (win) {
-    document.getElementById("result").textContent = "🏆 勝利！";
-    currentEnemyIndex++;
-  } else {
-    document.getElementById("result").textContent = "💀 敗北…";
-  }
+  document.getElementById("result").textContent =
+    win ? "🏆 勝利！" : "💀 敗北…";
+
+  if (win) currentEnemyIndex++;
 }
 
 // ==========================
@@ -143,7 +115,6 @@ function endMatch(win) {
 // ==========================
 function push() {
   if (!matchActive || player.stamina <= 0) return;
-
   gauge -= player.power * 0.4;
   player.stamina -= 0.5;
   updateGauge();
@@ -151,22 +122,18 @@ function push() {
 
 function useHook() {
   if (!matchActive || player.stamina < 3) return;
-
   hookActive = true;
   hookTimer = 3;
   player.stamina -= 3;
-
-  document.getElementById("result").textContent = "🛡 フック！防御体勢！";
+  document.getElementById("result").textContent = "🛡 フック！";
 }
 
 function useTopRoll() {
   if (!matchActive || player.stamina < 4) return;
-
   const enemy = enemies[currentEnemyIndex];
   enemy.stamina -= 3;
   gauge -= 6;
   player.stamina -= 4;
-
   document.getElementById("result").textContent = "⚡ トップロール！";
   updateGauge();
 }
