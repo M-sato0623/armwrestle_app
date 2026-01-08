@@ -1,9 +1,54 @@
-.character {
-  width:150px;
-  height:200px;
-  position:absolute;
-  bottom:0;
-  transition: transform 0.5s;
+body {
+  background:#111;
+  color:#fff;
+  text-align:center;
+  font-family:sans-serif;
 }
-#player { left:20px; }
-#opponent { right:20px; }
+
+#arena {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 220px;
+  margin: 20px auto;
+  border: 2px solid #444;
+}
+
+#player, #opponent {
+  position: absolute;
+  bottom: 0;
+  width: 140px;
+  height: auto;
+  transition: transform 0.4s;
+}
+
+#player {
+  left: 0;
+}
+
+#opponent {
+  right: 0;
+  transform: scaleX(-1); /* 向かい合わせ */
+}
+
+#gauge-bg {
+  width: 80%;
+  height: 20px;
+  background:#444;
+  margin:20px auto;
+  border-radius:10px;
+}
+
+#gauge {
+  height:100%;
+  width:50%;
+  background:linear-gradient(to right, red, yellow, lime);
+  border-radius:10px;
+  transition: width 0.3s;
+}
+
+button {
+  margin:4px;
+  padding:8px 14px;
+  font-size:14px;
+}
