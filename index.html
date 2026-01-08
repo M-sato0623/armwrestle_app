@@ -1,42 +1,10 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>アームレスリングゲーム</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+<h2 id="enemyName"></h2>
 
-<h1>アームレスリングゲーム</h1>
-
-<select id="playerSelect">
-  <option value="player1.png">赤井選手</option>
-  <option value="player2.png">青田選手</option>
-</select>
-
-<!-- 試合会場 -->
-<div id="arena">
-  <img id="player" src="player1.png">
-  <img id="opponent" src="opponent.png">
+<div style="width:300px; border:1px solid #000;">
+  <div id="gauge" style="height:20px; background:red; width:50%;"></div>
 </div>
 
-<div id="status"></div>
-
-<div id="controls">
-  <button onclick="train('power')">筋力</button>
-  <button onclick="train('wrist')">手首</button>
-  <button onclick="train('technique')">技術</button>
-  <button onclick="train('stamina')">スタミナ</button>
-  <button onclick="train('mental')">メンタル</button>
-</div>
-
+<button onclick="push()">押す！</button>
 <button onclick="startMatch()">試合開始</button>
 
-<div id="gauge-bg"><div id="gauge"></div></div>
-
 <p id="result"></p>
-
-<script src="game.js"></script>
-</body>
-</html>
