@@ -98,3 +98,42 @@ function endMatch(win) {
 function updateGauge() {
   document.getElementById("gauge").style.width = gauge + "%";
 }
+let hookActive = false;
+let hookTimer = 0;
+function useHook() {
+  if (!matchActive || player.stamina < 3) return;
+
+  hookActive = true;
+  hookTimer = 3; // 3ターン有効
+  player.stamina -= 3;
+
+  document.getElementById("result").textContent = "🛡 フック！防御体勢！";
+}
+function useTopRoll() {
+  if (!matchActive || player.stamina < 4) return;
+
+  const enemy = enemies[currentEnemyIndex];
+
+  enemy.stamina -= 3;
+  gauge -= 5; // 一気に押す
+  player.stamina -= 4;
+
+  document.getElementById("result").textContent = "⚡ トップロール！相手の腕を崩した！";
+
+  updateGauge();
+}
+const cpu = cpuPower(enemy);
+
+// フック中はCPUの力を軽減
+let cpuForce = cpu;
+if (hookActive) {
+  cpuForce *= 0.5;
+}
+
+gauge += cpuForce * 0.3;
+if (hookActive) {
+  hookTimer--;
+  if (hookTimer <= 0) {
+    hookActive = false;
+  }
+}
