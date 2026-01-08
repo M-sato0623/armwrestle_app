@@ -43,9 +43,9 @@ function rest(){
 
 // キャラクター選択
 document.getElementById("playerSelect").addEventListener("change", function(){
-    let playerDiv = document.getElementById("player");
-    if(this.value==="red") playerDiv.style.background="red";
-    else if(this.value==="blue") playerDiv.style.background="blue";
+    let playerElem = document.getElementById("player");
+    if(this.value==="red") playerElem.src="player1.png";
+    else if(this.value==="blue") playerElem.src="player2.png";
 });
 
 // 試合
@@ -95,3 +95,4 @@ function startTournament(rank){
 }
 
 updateStatus();
+
